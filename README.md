@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 용돈 기입장 💸
 
-## Getting Started
+Toss 스타일 용돈 기입장. Next.js 14 + TypeScript + Tailwind + Supabase.
 
-First, run the development server:
+## 시작하기
+
+### 1. Supabase 세팅
+
+1. [supabase.com](https://supabase.com) 에서 새 프로젝트 생성
+2. **SQL Editor** → `supabase-schema.sql` 내용 붙여넣기 → Run
+3. **Project Settings → API** 에서 URL과 anon key 복사
+
+### 2. 환경변수 설정
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
+# .env.local 에 Supabase URL과 anon key 입력
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. 로컬 실행
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Vercel 배포
 
-## Learn More
+Vercel 프로젝트 → Settings → Environment Variables 에서
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 추가
 
-To learn more about Next.js, take a look at the following resources:
+## 기능
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 💰 수입/지출 내역 입력 및 삭제
+- 🗂 카테고리 분류
+- 📊 월별 통계 및 차트 (6개월 바 차트, 파이 차트)
+- 🎯 카테고리별 + 총 예산 설정
+- ☁️ Supabase DB 저장
