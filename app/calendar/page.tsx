@@ -146,7 +146,7 @@ export default function CalendarPage() {
         )}
       </div>
 
-      <BottomNav active="home" />
+      <BottomNav active="calendar" />
     </div>
   );
 }
