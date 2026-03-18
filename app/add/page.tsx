@@ -37,15 +37,13 @@ export default function AddPage() {
       router.push("/");
     } catch (e) {
       alert("저장 중 오류가 발생했어요.");
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const isValid = amount && parseInt(amount) > 0 && description.trim() && date;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-toss-card-dark flex flex-col">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-toss-card-dark flex flex-col">
       <div className="flex items-center px-4 pt-14 pb-4">
         <button onClick={() => router.back()} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg dark:hover:bg-toss-bg-dark transition-colors mr-2">
           <ChevronLeft size={22} className="text-toss-text dark:text-white" />
@@ -69,8 +67,7 @@ export default function AddPage() {
         <div className="flex items-baseline gap-1">
           <input type="text" inputMode="numeric" placeholder="0" value={displayAmount}
             onChange={e => setAmount(e.target.value.replace(/[^0-9]/g,""))}
-            className="flex-1 text-[36px] font-bold text-toss-text dark:text-white bg-transparent border-none outline-none placeholder:text-toss-text-5" />
-          <span className="text-[24px] font-semibold text-toss-text-3">원</span>
+            className="flex-1 min-w-0 text-[36px] font-bold text-toss-text dark:text-white bg-transparent border-none outline-none placeholder:text-toss-text-5" />
         </div>
         <div className={`h-0.5 mt-2 rounded-full transition-colors ${amount ? (type==="expense" ? "bg-toss-red" : "bg-toss-green") : "bg-toss-border dark:bg-toss-border-dark"}`} />
       </div>
@@ -91,11 +88,12 @@ export default function AddPage() {
 
       <div className="px-5 mb-8">
         <p className="text-[12px] text-toss-text-4 mb-3 font-medium">카테고리</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {categories.map(cat => (
             <button key={cat.id} onClick={() => setCategory(cat.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-medium transition-all border ${category===cat.id ? (type==="expense" ? "bg-toss-red text-white border-toss-red" : "bg-toss-green text-white border-toss-green") : "bg-white dark:bg-toss-card-dark text-toss-text-3 border-toss-border dark:border-toss-border-dark"}`}>
-              <span className="text-[14px]">{cat.emoji}</span>{cat.label}
+              className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-2xl text-[13px] font-medium transition-all border ${category===cat.id ? (type==="expense" ? "bg-toss-red text-white border-toss-red" : "bg-toss-green text-white border-toss-green") : "bg-white dark:bg-toss-card-dark text-toss-text-3 border-toss-border dark:border-toss-border-dark"}`}>
+              <span className="text-[16px]">{cat.emoji}</span>
+              <span className="truncate">{cat.label}</span>
             </button>
           ))}
         </div>
