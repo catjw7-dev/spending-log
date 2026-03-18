@@ -22,7 +22,7 @@ export interface RecurringItem {
   amount: number;
   category: string;
   description: string;
-  dayOfMonth: number; // 매달 몇일
+  dayOfMonth: number;
   active: boolean;
 }
 

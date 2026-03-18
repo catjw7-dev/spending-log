@@ -212,7 +212,7 @@ export default function RecurringPage() {
         )}
       </div>
 
-      <BottomNav active="recurring" />
+      <BottomNav active="settings" />
     </div>
   );
 }
