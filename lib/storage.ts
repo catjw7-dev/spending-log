@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { Transaction, Budget } from "@/types";
+import { Transaction, Budget, RecurringItem } from "@/types";
 
 // ── Transactions ──────────────────────────────────────────
 
@@ -14,6 +14,14 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 export async function addTransaction(tx: Transaction): Promise<void> {
   const { error } = await supabase.from("transactions").insert(txToRow(tx));
+  if (error) throw error;
+}
+
+export async function updateTransaction(tx: Transaction): Promise<void> {
+  const { error } = await supabase
+    .from("transactions")
+    .update(txToRow(tx))
+    .eq("id", tx.id);
   if (error) throw error;
 }
 
@@ -46,6 +54,35 @@ export async function deleteBudget(category: string, month: string): Promise<voi
   if (error) throw error;
 }
 
+// ── Recurring ─────────────────────────────────────────────
+
+export async function getRecurring(): Promise<RecurringItem[]> {
+  const { data, error } = await supabase
+    .from("recurring")
+    .select("*")
+    .order("day_of_month", { ascending: true });
+  if (error) { console.error(error); return []; }
+  return (data ?? []).map(rowToRecurring);
+}
+
+export async function addRecurring(item: RecurringItem): Promise<void> {
+  const { error } = await supabase.from("recurring").insert(recurringToRow(item));
+  if (error) throw error;
+}
+
+export async function updateRecurring(item: RecurringItem): Promise<void> {
+  const { error } = await supabase
+    .from("recurring")
+    .update(recurringToRow(item))
+    .eq("id", item.id);
+  if (error) throw error;
+}
+
+export async function deleteRecurring(id: string): Promise<void> {
+  const { error } = await supabase.from("recurring").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ── Row mappers ───────────────────────────────────────────
 
 function rowToTx(row: any): Transaction {
@@ -72,15 +109,35 @@ function txToRow(tx: Transaction) {
 }
 
 function rowToBudget(row: any): Budget {
-  return {
-    category: row.category,
-    amount: row.amount,
-    month: row.month,
-  };
+  return { category: row.category, amount: row.amount, month: row.month };
 }
 
 function budgetToRow(b: Budget) {
   return { category: b.category, amount: b.amount, month: b.month };
+}
+
+function rowToRecurring(row: any): RecurringItem {
+  return {
+    id: row.id,
+    type: row.type,
+    amount: row.amount,
+    category: row.category,
+    description: row.description,
+    dayOfMonth: row.day_of_month,
+    active: row.active,
+  };
+}
+
+function recurringToRow(r: RecurringItem) {
+  return {
+    id: r.id,
+    type: r.type,
+    amount: r.amount,
+    category: r.category,
+    description: r.description,
+    day_of_month: r.dayOfMonth,
+    active: r.active,
+  };
 }
 
 // ── Helpers ───────────────────────────────────────────────

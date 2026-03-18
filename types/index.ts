@@ -6,14 +6,24 @@ export interface Transaction {
   amount: number;
   category: string;
   description: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   createdAt: number;
 }
 
 export interface Budget {
   category: string;
   amount: number;
-  month: string; // YYYY-MM
+  month: string;
+}
+
+export interface RecurringItem {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  description: string;
+  dayOfMonth: number; // 매달 몇일
+  active: boolean;
 }
 
 export interface MonthlyStats {

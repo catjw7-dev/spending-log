@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Download } from "lucide-react";
 import { Transaction, getCategoryEmoji } from "@/types";
 import { getTransactions, deleteTransaction, formatKRW, getMonthKey, getMonthLabel } from "@/lib/storage";
 import BottomNav from "@/components/BottomNav";
@@ -36,14 +36,8 @@ export default function HomePage() {
     [transactions, monthKey]
   );
 
-  const income = useMemo(
-    () => monthlyTxs.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0),
-    [monthlyTxs]
-  );
-  const expense = useMemo(
-    () => monthlyTxs.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0),
-    [monthlyTxs]
-  );
+  const income = useMemo(() => monthlyTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
+  const expense = useMemo(() => monthlyTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
   const balance = income - expense;
 
   const grouped = useMemo(() => {
@@ -67,6 +61,7 @@ export default function HomePage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("삭제할까요?")) return;
     setDeletingId(id);
     try {
       await deleteTransaction(id);
@@ -76,28 +71,42 @@ export default function HomePage() {
     }
   };
 
+  const handleExcel = () => {
+    const rows = [
+      ["날짜", "유형", "카테고리", "내용", "금액"],
+      ...monthlyTxs
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(t => [
+          t.date,
+          t.type === "income" ? "수입" : "지출",
+          t.category,
+          t.description,
+          t.type === "income" ? t.amount : -t.amount,
+        ])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${getMonthLabel(monthKey)}_지출내역.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col min-h-screen pb-24">
-      {/* Header */}
       <div className="bg-white px-5 pt-14 pb-6 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center justify-between mb-5">
-          <button
-            onClick={() => setCurrentMonth((p) => addMonths(p, -1))}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors"
-          >
+          <button onClick={() => setCurrentMonth(p => addMonths(p, -1))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors">
             <ChevronLeft size={20} className="text-toss-text-3" />
           </button>
-          <span className="text-[17px] font-semibold text-toss-text">
-            {getMonthLabel(monthKey)}
-          </span>
-          <button
-            onClick={() => setCurrentMonth((p) => addMonths(p, 1))}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors"
-          >
+          <span className="text-[17px] font-semibold text-toss-text">{getMonthLabel(monthKey)}</span>
+          <button onClick={() => setCurrentMonth(p => addMonths(p, 1))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors">
             <ChevronRight size={20} className="text-toss-text-3" />
           </button>
         </div>
-
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-toss-bg rounded-2xl px-4 py-3">
             <p className="text-[11px] text-toss-text-4 mb-1">수입</p>
@@ -117,6 +126,14 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-4 pt-4">
+        {/* Excel 다운로드 버튼 */}
+        {monthlyTxs.length > 0 && (
+          <button onClick={handleExcel} className="flex items-center gap-2 ml-auto mb-4 px-3 py-2 bg-white rounded-xl border border-toss-border text-[13px] text-toss-text-3 font-medium shadow-card hover:bg-toss-bg transition-colors">
+            <Download size={14} />
+            CSV 다운로드
+          </button>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <div className="w-6 h-6 border-2 border-toss-blue border-t-transparent rounded-full animate-spin" />
@@ -130,8 +147,8 @@ export default function HomePage() {
           </div>
         ) : (
           grouped.map(([date, txs]) => {
-            const dayIncome = txs.filter(t => t.type === "income").reduce((s,t)=>s+t.amount,0);
-            const dayExpense = txs.filter(t => t.type === "expense").reduce((s,t)=>s+t.amount,0);
+            const dayIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
+            const dayExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
             return (
               <div key={date} className="mb-5">
                 <div className="flex items-center justify-between mb-2 px-1">
@@ -145,10 +162,7 @@ export default function HomePage() {
                 </div>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-card">
                   {txs.map((tx, i) => (
-                    <div
-                      key={tx.id}
-                      className={`flex items-center px-4 py-3.5 ${i < txs.length - 1 ? "border-b border-toss-border" : ""} ${deletingId === tx.id ? "opacity-40" : ""} transition-opacity`}
-                    >
+                    <div key={tx.id} className={`flex items-center px-4 py-3.5 ${i < txs.length - 1 ? "border-b border-toss-border" : ""} ${deletingId === tx.id ? "opacity-40" : ""} transition-opacity`}>
                       <div className="w-10 h-10 rounded-full bg-toss-bg flex items-center justify-center text-xl mr-3 flex-shrink-0">
                         {getCategoryEmoji(tx.category)}
                       </div>
@@ -156,15 +170,14 @@ export default function HomePage() {
                         <p className="text-[15px] font-medium text-toss-text truncate">{tx.description}</p>
                         <p className="text-[12px] text-toss-text-4 mt-0.5">{tx.category}</p>
                       </div>
-                      <p className={`text-[15px] font-semibold mr-3 ${tx.type === "income" ? "text-toss-green" : "text-toss-red"}`}>
+                      <p className={`text-[15px] font-semibold mr-2 ${tx.type === "income" ? "text-toss-green" : "text-toss-red"}`}>
                         {tx.type === "income" ? "+" : "-"}{formatKRW(tx.amount)}
                       </p>
-                      <button
-                        onClick={() => handleDelete(tx.id)}
-                        disabled={deletingId === tx.id}
-                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors flex-shrink-0"
-                      >
-                        <Trash2 size={14} className="text-toss-text-5" />
+                      <button onClick={() => router.push(`/edit/${tx.id}`)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors flex-shrink-0">
+                        <Pencil size={13} className="text-toss-text-5" />
+                      </button>
+                      <button onClick={() => handleDelete(tx.id)} disabled={deletingId === tx.id} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-toss-bg transition-colors flex-shrink-0">
+                        <Trash2 size={13} className="text-toss-text-5" />
                       </button>
                     </div>
                   ))}

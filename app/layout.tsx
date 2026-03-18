@@ -4,14 +4,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "용돈 기입장",
   description: "내 소비를 한눈에",
-  manifest: "/manifest.json",
-  themeColor: "#3185FC",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "기입장",
-  },
 };
+
 export default function RootLayout({
   children,
 }: {

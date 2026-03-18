@@ -1,8 +1,8 @@
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
 * {
   -webkit-tap-highlight-color: transparent;
@@ -15,7 +15,7 @@ html {
 body {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #f2f4f6;
-  color: #131B23;
+  color: #191f28;
   -webkit-font-smoothing: antialiased;
 }
 
