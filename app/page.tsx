@@ -33,7 +33,13 @@ export default function HomePage() {
   const monthlyTxs = useMemo(() => transactions.filter(t => t.date.startsWith(monthKey)), [transactions, monthKey]);
   const income = useMemo(() => monthlyTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
   const expense = useMemo(() => monthlyTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
-  const balance = income - expense;
+
+  // 전체 누적 잔액 (선택한 달 포함 그 이전까지 전부)
+  const balance = useMemo(() => {
+    return transactions
+      .filter(t => t.date <= `${monthKey}-31`)
+      .reduce((s, t) => t.type === "income" ? s + t.amount : s - t.amount, 0);
+  }, [transactions, monthKey]);
 
   const grouped = useMemo(() => {
     const map: Record<string, Transaction[]> = {};
