@@ -143,7 +143,7 @@ function recurringToRow(r: RecurringItem) {
 // ── Helpers ───────────────────────────────────────────────
 
 export function formatKRW(amount: number): string {
-  return new Intl.NumberFormat("ko-KR").format(Math.abs(amount)) + "원";
+  return new Intl.NumberFormat("ko-KR").format(Math.abs(amount));
 }
 
 export function getMonthKey(date: Date): string {
