@@ -1,88 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { Transaction, Budget, RecurringItem } from "@/types";
 
-// ── Transactions ──────────────────────────────────────────
-
-export async function getTransactions(): Promise<Transaction[]> {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .order("date", { ascending: false });
-  if (error) { console.error(error); return []; }
-  return (data ?? []).map(rowToTx);
-}
-
-export async function addTransaction(tx: Transaction): Promise<void> {
-  const { error } = await supabase.from("transactions").insert(txToRow(tx));
-  if (error) throw error;
-}
-
-export async function updateTransaction(tx: Transaction): Promise<void> {
-  const { error } = await supabase
-    .from("transactions")
-    .update(txToRow(tx))
-    .eq("id", tx.id);
-  if (error) throw error;
-}
-
-export async function deleteTransaction(id: string): Promise<void> {
-  const { error } = await supabase.from("transactions").delete().eq("id", id);
-  if (error) throw error;
-}
-
-// ── Budgets ───────────────────────────────────────────────
-
-export async function getBudgets(): Promise<Budget[]> {
-  const { data, error } = await supabase.from("budgets").select("*");
-  if (error) { console.error(error); return []; }
-  return (data ?? []).map(rowToBudget);
-}
-
-export async function upsertBudget(budget: Budget): Promise<void> {
-  const { error } = await supabase
-    .from("budgets")
-    .upsert(budgetToRow(budget), { onConflict: "category,month" });
-  if (error) throw error;
-}
-
-export async function deleteBudget(category: string, month: string): Promise<void> {
-  const { error } = await supabase
-    .from("budgets")
-    .delete()
-    .eq("category", category)
-    .eq("month", month);
-  if (error) throw error;
-}
-
-// ── Recurring ─────────────────────────────────────────────
-
-export async function getRecurring(): Promise<RecurringItem[]> {
-  const { data, error } = await supabase
-    .from("recurring")
-    .select("*")
-    .order("day_of_month", { ascending: true });
-  if (error) { console.error(error); return []; }
-  return (data ?? []).map(rowToRecurring);
-}
-
-export async function addRecurring(item: RecurringItem): Promise<void> {
-  const { error } = await supabase.from("recurring").insert(recurringToRow(item));
-  if (error) throw error;
-}
-
-export async function updateRecurring(item: RecurringItem): Promise<void> {
-  const { error } = await supabase
-    .from("recurring")
-    .update(recurringToRow(item))
-    .eq("id", item.id);
-  if (error) throw error;
-}
-
-export async function deleteRecurring(id: string): Promise<void> {
-  const { error } = await supabase.from("recurring").delete().eq("id", id);
-  if (error) throw error;
-}
-
 // ── Row mappers ───────────────────────────────────────────
 
 function rowToTx(row: any): Transaction {
@@ -138,6 +56,103 @@ function recurringToRow(r: RecurringItem) {
     day_of_month: r.dayOfMonth,
     active: r.active,
   };
+}
+
+// ── Transactions ──────────────────────────────────────────
+
+export async function getTransactions(): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("date", { ascending: false });
+  if (error) { console.error(error); return []; }
+  return (data ?? []).map(rowToTx);
+}
+
+// 수정 페이지용 - id 하나만 조회
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) { console.error(error); return null; }
+  return rowToTx(data);
+}
+
+export async function addTransaction(tx: Transaction): Promise<void> {
+  const { error } = await supabase.from("transactions").insert(txToRow(tx));
+  if (error) throw error;
+}
+
+// 수정 후 전체 재조회 없이 로컬 state만 업데이트하도록 tx 반환
+export async function updateTransaction(tx: Transaction): Promise<Transaction> {
+  const { error } = await supabase
+    .from("transactions")
+    .update(txToRow(tx))
+    .eq("id", tx.id);
+  if (error) throw error;
+  return tx;
+}
+
+// 삭제 후 전체 재조회 없이 id만 반환
+export async function deleteTransaction(id: string): Promise<string> {
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) throw error;
+  return id;
+}
+
+// ── Budgets ───────────────────────────────────────────────
+
+export async function getBudgets(): Promise<Budget[]> {
+  const { data, error } = await supabase.from("budgets").select("*");
+  if (error) { console.error(error); return []; }
+  return (data ?? []).map(rowToBudget);
+}
+
+export async function upsertBudget(budget: Budget): Promise<void> {
+  const { error } = await supabase
+    .from("budgets")
+    .upsert(budgetToRow(budget), { onConflict: "category,month" });
+  if (error) throw error;
+}
+
+export async function deleteBudget(category: string, month: string): Promise<void> {
+  const { error } = await supabase
+    .from("budgets")
+    .delete()
+    .eq("category", category)
+    .eq("month", month);
+  if (error) throw error;
+}
+
+// ── Recurring ─────────────────────────────────────────────
+
+export async function getRecurring(): Promise<RecurringItem[]> {
+  const { data, error } = await supabase
+    .from("recurring")
+    .select("*")
+    .order("day_of_month", { ascending: true });
+  if (error) { console.error(error); return []; }
+  return (data ?? []).map(rowToRecurring);
+}
+
+export async function addRecurring(item: RecurringItem): Promise<void> {
+  const { error } = await supabase.from("recurring").insert(recurringToRow(item));
+  if (error) throw error;
+}
+
+export async function updateRecurring(item: RecurringItem): Promise<void> {
+  const { error } = await supabase
+    .from("recurring")
+    .update(recurringToRow(item))
+    .eq("id", item.id);
+  if (error) throw error;
+}
+
+export async function deleteRecurring(id: string): Promise<void> {
+  const { error } = await supabase.from("recurring").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ── Helpers ───────────────────────────────────────────────

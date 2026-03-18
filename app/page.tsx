@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Download } from "lucide-react";
 import { Transaction, getCategoryEmoji } from "@/types";
@@ -20,21 +20,27 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const load = async () => {
-    setLoading(true);
-    const txs = await getTransactions();
-    setTransactions(txs);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    getTransactions().then(txs => { setTransactions(txs); setLoading(false); });
+  }, []);
 
   const monthKey = getMonthKey(currentMonth);
-  const monthlyTxs = useMemo(() => transactions.filter(t => t.date.startsWith(monthKey)), [transactions, monthKey]);
-  const income = useMemo(() => monthlyTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
-  const expense = useMemo(() => monthlyTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0), [monthlyTxs]);
 
-  // 전체 누적 잔액 (선택한 달 포함 그 이전까지 전부)
+  const monthlyTxs = useMemo(
+    () => transactions.filter(t => t.date.startsWith(monthKey)),
+    [transactions, monthKey]
+  );
+
+  const income = useMemo(
+    () => monthlyTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0),
+    [monthlyTxs]
+  );
+  const expense = useMemo(
+    () => monthlyTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
+    [monthlyTxs]
+  );
+
+  // 전체 누적 잔액
   const balance = useMemo(() => {
     return transactions
       .filter(t => t.date <= `${monthKey}-31`)
@@ -61,7 +67,8 @@ export default function HomePage() {
     return dateStr === `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
   };
 
-  const handleDelete = async (id: string) => {
+  // 전체 재조회 없이 로컬 state만 업데이트
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm("삭제할까요?")) return;
     setDeletingId(id);
     try {
@@ -70,7 +77,7 @@ export default function HomePage() {
     } finally {
       setDeletingId(null);
     }
-  };
+  }, []);
 
   const handleExcel = () => {
     const rows = [
