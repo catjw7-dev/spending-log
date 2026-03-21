@@ -87,7 +87,7 @@ export default function StatsPage() {
             <BarChart data={barData} barSize={12} barGap={4}>
               <XAxis dataKey="month" tick={{fontSize:11,fill:"#8B95A1"}} axisLine={false} tickLine={false}/>
               <YAxis hide/>
-              <Tooltip content={<Tip/>} cursor={{fill:"rgba(255,255,255,0.1)"}}/>
+              <Tooltip content={<Tip/>} cursor={false}/>
               <Bar dataKey="income"  fill="#00B493" radius={[4,4,0,0]}/>
               <Bar dataKey="expense" fill="#F04452" radius={[4,4,0,0]}/>
             </BarChart>

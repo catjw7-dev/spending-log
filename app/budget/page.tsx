@@ -10,7 +10,7 @@ function addMonths(date: Date, n: number) { const d = new Date(date); d.setMonth
 
 function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
   const pct = budget > 0 ? Math.min(100, (spent/budget)*100) : 0;
-  const radius = 80, cx = 110, cy = 110;
+  const radius = 80, cx = 110, cy = 100;
   const toRad = (deg: number) => (deg*Math.PI)/180;
   const arcPath = (start: number, end: number) => {
     const s = { x: cx+radius*Math.cos(toRad(start)), y: cy+radius*Math.sin(toRad(start)) };
@@ -19,15 +19,17 @@ function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
   };
   const endAngle = 150 + (240*pct)/100;
   const color = pct>=100?"#F04452":pct>=80?"#F7C244":"#00B493";
+  // 빈 공간(120도) 중앙 = 270도(정아래) → cy + radius = 텍스트 y 기준
+  const textY = cy + radius + 28;
 
   return (
-    <svg viewBox="0 0 220 175" className="w-full max-w-[260px] mx-auto">
+    <svg viewBox="0 0 220 190" className="w-full max-w-[260px] mx-auto">
       <path d={arcPath(150,390)} fill="none" stroke="#E5E8EB" strokeWidth="14" strokeLinecap="round"/>
       {pct>0 && <path d={arcPath(150,endAngle)} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"/>}
       {/* % 중앙 */}
-      <text x={cx} y={cy+8} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(pct)}%</text>
-      {/* 하단 빈 공간 - 가로 중앙 정렬 */}
-      <text x={cx} y={cy+58} textAnchor="middle" fontSize="13" fontFamily="Pretendard,sans-serif">
+      <text x={cx} y={cy+10} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(pct)}%</text>
+      {/* 빈 공간 정중앙에 x/y */}
+      <text x={cx} y={textY} textAnchor="middle" fontSize="13" fontFamily="Pretendard,sans-serif">
         <tspan fontWeight="600" fill={color}>{formatKRW(spent)}</tspan>
         <tspan fill="#8B95A1"> / </tspan>
         <tspan fill="#8B95A1">{budget>0?formatKRW(budget):"미설정"}</tspan>
