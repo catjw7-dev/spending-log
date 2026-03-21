@@ -17,16 +17,30 @@ export default function HomePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    getTransactions().then(txs => { setTransactions(txs); setLoading(false); });
+    getTransactions().then(txs => {
+      setTransactions(txs);
+      setLoading(false);
+      setTimeout(() => setVisible(true), 50);
+    });
   }, []);
+
+  // 월 바꿀 때 애니메이션 리셋
+  const handleMonthChange = (n: number) => {
+    setVisible(false);
+    setTimeout(() => {
+      setCurrentMonth(p => addMonths(p, n));
+      setVisible(true);
+    }, 150);
+  };
 
   const monthKey = getMonthKey(currentMonth);
   const monthlyTxs = useMemo(() => transactions.filter(t => t.date.startsWith(monthKey)), [transactions, monthKey]);
-  const income  = useMemo(() => monthlyTxs.filter(t => t.type === "income").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
-  const expense = useMemo(() => monthlyTxs.filter(t => t.type === "expense").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
-  const balance = useMemo(() => transactions.filter(t => t.date <= `${monthKey}-31`).reduce((s,t) => t.type==="income" ? s+t.amount : s-t.amount, 0), [transactions, monthKey]);
+  const income  = useMemo(() => monthlyTxs.filter(t => t.type==="income").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
+  const expense = useMemo(() => monthlyTxs.filter(t => t.type==="expense").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
+  const balance = useMemo(() => transactions.filter(t => t.date<=`${monthKey}-31`).reduce((s,t) => t.type==="income"?s+t.amount:s-t.amount, 0), [transactions, monthKey]);
 
   const grouped = useMemo(() => {
     const map: Record<string, Transaction[]> = {};
@@ -65,7 +79,7 @@ export default function HomePage() {
         t.type==="income" ? t.amount : -t.amount,
       ])
     ];
-    const blob = new Blob(["\uFEFF" + rows.map(r=>r.join(",")).join("\n")], { type:"text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF"+rows.map(r=>r.join(",")).join("\n")], {type:"text/csv;charset=utf-8;"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `${getMonthLabel(monthKey)}_지출내역.csv`;
@@ -77,32 +91,47 @@ export default function HomePage() {
       {/* 헤더 */}
       <div className="bg-surface dark:bg-dark-card px-page pt-14 pb-card sticky top-0 z-10 shadow-card">
         <div className="flex items-center justify-between mb-gap-lg">
-          <button onClick={() => setCurrentMonth(p => addMonths(p,-1))} className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors">
+          <button
+            onClick={() => handleMonthChange(-1)}
+            className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-all active:scale-90">
             <ChevronLeft size={20} className="text-text-secondary" />
           </button>
-          <span className="text-title text-ink dark:text-white">{getMonthLabel(monthKey)}</span>
-          <button onClick={() => setCurrentMonth(p => addMonths(p,1))} className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors">
+          <span className="text-title text-ink dark:text-white transition-opacity duration-150" style={{opacity: visible ? 1 : 0}}>
+            {getMonthLabel(monthKey)}
+          </span>
+          <button
+            onClick={() => handleMonthChange(1)}
+            className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-all active:scale-90">
             <ChevronRight size={20} className="text-text-secondary" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-gap">
-          {[
-            { label:"수입", value:`+${formatKRW(income)}`, color:"text-income" },
-            { label:"지출", value:`-${formatKRW(expense)}`, color:"text-expense" },
-            { label:"잔액", value:`${balance<0?"-":""}${formatKRW(balance)}`, color: balance>=0 ? "text-ink dark:text-white" : "text-expense" },
-          ].map(item => (
-            <div key={item.label} className="bg-page-bg dark:bg-dark-bg rounded-item px-gap-lg py-gap">
-              <p className="text-label text-text-muted mb-1">{item.label}</p>
-              <p className={`text-amount-sm ${item.color}`}>{item.value}</p>
-            </div>
-          ))}
+
+        {/* 수입/지출/잔액 카드 */}
+        <div
+          className="grid grid-cols-3 gap-gap transition-all duration-300"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(6px)" }}>
+          <div className="bg-page-bg dark:bg-dark-bg rounded-item px-gap-lg py-gap">
+            <p className="text-label text-text-muted mb-1">수입</p>
+            <p className="text-amount-sm font-bold text-income">+{formatKRW(income)}</p>
+          </div>
+          <div className="bg-page-bg dark:bg-dark-bg rounded-item px-gap-lg py-gap">
+            <p className="text-label text-text-muted mb-1">지출</p>
+            <p className="text-amount-sm font-bold text-expense">-{formatKRW(expense)}</p>
+          </div>
+          <div className="bg-page-bg dark:bg-dark-bg rounded-item px-gap-lg py-gap">
+            <p className="text-label text-text-muted mb-1">잔액</p>
+            <p className={`text-amount-sm font-bold ${balance>=0?"text-ink dark:text-white":"text-expense"}`}>
+              {balance>=0?"":"-"}{formatKRW(balance)}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* 내역 목록 */}
       <div className="flex-1 px-page pt-gap-lg">
         {monthlyTxs.length > 0 && (
-          <button onClick={handleCSV} className="flex items-center gap-gap-sm ml-auto mb-gap-lg px-gap py-gap-sm bg-surface dark:bg-dark-card rounded-item border border-border dark:border-dark-border text-caption text-text-secondary font-medium shadow-card">
+          <button onClick={handleCSV}
+            className="flex items-center gap-gap-sm ml-auto mb-gap-lg px-gap py-gap-sm bg-surface dark:bg-dark-card rounded-item border border-border dark:border-dark-border text-caption text-text-secondary font-medium shadow-card hover:opacity-70 transition-opacity">
             <Download size={13} /> CSV 다운로드
           </button>
         )}
@@ -113,27 +142,38 @@ export default function HomePage() {
             <p className="text-caption text-text-muted">불러오는 중...</p>
           </div>
         ) : grouped.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div
+            className="flex flex-col items-center justify-center py-20 text-center transition-all duration-500"
+            style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(12px)" }}>
             <div className="text-5xl mb-gap-lg">💸</div>
             <p className="text-subtitle text-text-secondary">이번 달 내역이 없어요</p>
             <p className="text-caption text-text-muted mt-1">아래 + 버튼으로 추가해보세요</p>
           </div>
         ) : (
-          grouped.map(([date, txs]) => {
+          grouped.map(([date, txs], gi) => {
             const di = txs.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
             const de = txs.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
             return (
-              <div key={date} className="mb-section">
+              <div
+                key={date}
+                className="mb-section transition-all duration-300"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateY(0)" : "translateY(10px)",
+                  transitionDelay: `${gi * 50}ms`,
+                }}>
                 <div className="flex items-center justify-between mb-gap px-1">
                   <span className="text-caption font-medium text-text-muted">{isToday(date) ? "오늘" : formatDate(date)}</span>
                   <div className="flex gap-gap text-caption">
-                    {di > 0 && <span className="text-income">+{formatKRW(di)}</span>}
-                    {de > 0 && <span className="text-expense">-{formatKRW(de)}</span>}
+                    {di > 0 && <span className="text-income font-medium">+{formatKRW(di)}</span>}
+                    {de > 0 && <span className="text-expense font-medium">-{formatKRW(de)}</span>}
                   </div>
                 </div>
                 <div className="bg-surface dark:bg-dark-card rounded-card overflow-hidden shadow-card">
                   {txs.map((tx, i) => (
-                    <div key={tx.id} className={`flex items-center px-card py-item ${i < txs.length-1 ? "border-b border-border dark:border-dark-border" : ""} ${deletingId===tx.id ? "opacity-40" : ""} transition-opacity`}>
+                    <div
+                      key={tx.id}
+                      className={`flex items-center px-card py-item ${i < txs.length-1 ? "border-b border-border dark:border-dark-border" : ""} ${deletingId===tx.id ? "opacity-30" : "opacity-100"} transition-all duration-200`}>
                       <div className="w-icon-lg h-icon-lg rounded-pill bg-page-bg dark:bg-dark-bg flex items-center justify-center text-xl mr-gap flex-shrink-0">
                         {getCategoryEmoji(tx.category)}
                       </div>
@@ -141,13 +181,18 @@ export default function HomePage() {
                         <p className="text-subtitle text-ink dark:text-white truncate">{tx.description}</p>
                         <p className="text-label text-text-muted mt-0.5">{tx.category}</p>
                       </div>
-                      <p className={`text-amount-sm mr-gap-sm ${tx.type==="income" ? "text-income" : "text-expense"}`}>
-                        {tx.type==="income" ? "+" : "-"}{formatKRW(tx.amount)}
+                      <p className={`text-amount-sm font-bold mr-gap-sm ${tx.type==="income"?"text-income":"text-expense"}`}>
+                        {tx.type==="income"?"+":"-"}{formatKRW(tx.amount)}
                       </p>
-                      <button onClick={() => router.push(`/edit/${tx.id}`)} className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors flex-shrink-0">
+                      <button
+                        onClick={() => router.push(`/edit/${tx.id}`)}
+                        className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-all active:scale-90 flex-shrink-0">
                         <Pencil size={13} className="text-text-disabled" />
                       </button>
-                      <button onClick={() => handleDelete(tx.id)} disabled={deletingId===tx.id} className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors flex-shrink-0">
+                      <button
+                        onClick={() => handleDelete(tx.id)}
+                        disabled={deletingId===tx.id}
+                        className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-all active:scale-90 flex-shrink-0">
                         <Trash2 size={13} className="text-text-disabled" />
                       </button>
                     </div>
@@ -159,8 +204,10 @@ export default function HomePage() {
         )}
       </div>
 
-      <button onClick={() => router.push("/add")}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-primary rounded-pill flex items-center justify-center active:scale-95 transition-transform z-20 shadow-primary">
+      {/* FAB */}
+      <button
+        onClick={() => router.push("/add")}
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary rounded-pill flex items-center justify-center active:scale-90 transition-all z-20 shadow-primary">
         <Plus size={24} className="text-white" strokeWidth={2.5} />
       </button>
 
