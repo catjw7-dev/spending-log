@@ -19,16 +19,15 @@ function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
   };
   const endAngle = 150 + (240*pct)/100;
   const color = pct>=100?"#F04452":pct>=80?"#F7C244":"#00B493";
-  // 빈 공간(120도) 중앙 = 270도(정아래) → cy + radius = 텍스트 y 기준
   const textY = cy + radius + 28;
+  const isDark = typeof window !== "undefined" && document.documentElement.classList.contains("dark");
+  const trackColor = isDark ? "#2A3340" : "#E5E8EB";
 
   return (
     <svg viewBox="0 0 220 190" className="w-full max-w-[260px] mx-auto">
-      <path d={arcPath(150,390)} fill="none" stroke="#E5E8EB" strokeWidth="14" strokeLinecap="round"/>
+      <path d={arcPath(150,390)} fill="none" stroke={trackColor} strokeWidth="14" strokeLinecap="round"/>
       {pct>0 && <path d={arcPath(150,endAngle)} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"/>}
-      {/* % 중앙 */}
       <text x={cx} y={cy+10} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(pct)}%</text>
-      {/* 빈 공간 정중앙에 x/y */}
       <text x={cx} y={textY} textAnchor="middle" fontSize="13" fontFamily="Pretendard,sans-serif">
         <tspan fontWeight="600" fill={color}>{formatKRW(spent)}</tspan>
         <tspan fill="#8B95A1"> / </tspan>
@@ -175,7 +174,7 @@ export default function BudgetPage() {
                       )}
                     </div>
                     {budget>0 && (
-                      <div className="h-1.5 bg-page-bg dark:bg-dark-bg rounded-pill overflow-hidden">
+                      <div className="h-1.5 bg-border dark:bg-[#2A3340] rounded-pill overflow-hidden">
                         <div className={`h-full rounded-pill transition-all duration-500 ${pct>=100?"bg-expense":pct>=80?"bg-yellow-400":"bg-income"}`} style={{width:`${pct}%`}}/>
                       </div>
                     )}

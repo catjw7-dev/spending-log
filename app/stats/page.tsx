@@ -72,7 +72,7 @@ export default function StatsPage() {
           </div>
           {income > 0 && (
             <div className="mt-gap-lg">
-              <div className="h-2 bg-page-bg dark:bg-dark-bg rounded-pill overflow-hidden">
+              <div className="h-2 bg-border dark:bg-[#2A3340] rounded-pill overflow-hidden">
                 <div className="h-full bg-expense rounded-pill transition-all duration-500" style={{width:`${Math.min(100,Math.round((expense/income)*100))}%`}} />
               </div>
               <p className="text-label text-text-muted mt-gap-sm">수입 대비 지출 {Math.min(100,Math.round((expense/income)*100))}%</p>
@@ -119,7 +119,7 @@ export default function StatsPage() {
                       <span className="text-caption font-medium text-ink dark:text-white">{cat.name}</span>
                       <span className="text-caption font-semibold text-ink dark:text-white">{formatKRW(cat.value)}</span>
                     </div>
-                    <div className="h-1.5 bg-page-bg dark:bg-dark-bg rounded-pill overflow-hidden">
+                    <div className="h-1.5 bg-border dark:bg-[#2A3340] rounded-pill overflow-hidden">
                       <div className="h-full rounded-pill" style={{width:`${Math.round((cat.value/expense)*100)}%`,backgroundColor:PIE_COLORS[i%PIE_COLORS.length]}}/>
                     </div>
                   </div>
