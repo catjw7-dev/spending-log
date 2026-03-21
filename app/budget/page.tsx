@@ -220,7 +220,7 @@ export default function BudgetPage() {
           })}
         </div>
       </div>
-      <BottomNav active="settings" />
+      <BottomNav active="budget" />
     </div>
   );
 }

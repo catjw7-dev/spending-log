@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Moon, Sun, Bell, RefreshCw, ChevronRight } from "lucide-react";
+import { Moon, Sun, Bell, RefreshCw, ChevronRight, Sparkles } from "lucide-react";
 import { getTheme, setTheme } from "@/lib/theme";
 import BottomNav from "@/components/BottomNav";
 
@@ -46,6 +46,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-3">
+        {/* 화면 */}
         <div className="bg-white dark:bg-toss-card-dark rounded-2xl shadow-card overflow-hidden">
           <p className="text-[12px] font-medium text-toss-text-4 px-5 pt-4 pb-2">화면</p>
           <Row icon={dark ? <Moon size={16} /> : <Sun size={16} />} label="다크모드">
@@ -56,6 +57,7 @@ export default function SettingsPage() {
           </Row>
         </div>
 
+        {/* 알림 */}
         <div className="bg-white dark:bg-toss-card-dark rounded-2xl shadow-card overflow-hidden">
           <p className="text-[12px] font-medium text-toss-text-4 px-5 pt-4 pb-2">알림</p>
           <Row icon={<Bell size={16} />} label="푸시 알림">
@@ -67,7 +69,15 @@ export default function SettingsPage() {
               </button>
             )}
           </Row>
-          <Row icon={<RefreshCw size={16} />} label="반복 내역 관리" onClick={() => router.push("/recurring")}>
+        </div>
+
+        {/* 기능 */}
+        <div className="bg-white dark:bg-toss-card-dark rounded-2xl shadow-card overflow-hidden">
+          <p className="text-[12px] font-medium text-toss-text-4 px-5 pt-4 pb-2">기능</p>
+          <Row icon={<RefreshCw size={16} />} label="반복 내역" onClick={() => router.push("/recurring")}>
+            <ChevronRight size={16} className="text-toss-text-5" />
+          </Row>
+          <Row icon={<Sparkles size={16} />} label="AI 소비 분석" onClick={() => router.push("/ai")}>
             <ChevronRight size={16} className="text-toss-text-5" />
           </Row>
         </div>
