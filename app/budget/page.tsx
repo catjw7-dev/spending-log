@@ -26,10 +26,12 @@ function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
       {pct>0 && <path d={arcPath(150,endAngle)} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"/>}
       {/* % 중앙 */}
       <text x={cx} y={cy+8} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(pct)}%</text>
-      {/* 하단 빈 공간 - 가로 표시 */}
-      <text x={cx-8} y={cy+58} textAnchor="end" fontSize="13" fontWeight="600" fill={color} fontFamily="Pretendard,sans-serif">{formatKRW(spent)}</text>
-      <text x={cx} y={cy+58} textAnchor="middle" fontSize="13" fill="#8B95A1" fontFamily="Pretendard,sans-serif"> / </text>
-      <text x={cx+8} y={cy+58} textAnchor="start" fontSize="13" fill="#8B95A1" fontFamily="Pretendard,sans-serif">{budget>0?formatKRW(budget):"미설정"}</text>
+      {/* 하단 빈 공간 - 가로 중앙 정렬 */}
+      <text x={cx} y={cy+58} textAnchor="middle" fontSize="13" fontFamily="Pretendard,sans-serif">
+        <tspan fontWeight="600" fill={color}>{formatKRW(spent)}</tspan>
+        <tspan fill="#8B95A1"> / </tspan>
+        <tspan fill="#8B95A1">{budget>0?formatKRW(budget):"미설정"}</tspan>
+      </text>
     </svg>
   );
 }
