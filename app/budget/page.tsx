@@ -9,7 +9,25 @@ import BottomNav from "@/components/BottomNav";
 function addMonths(date: Date, n: number) { const d = new Date(date); d.setMonth(d.getMonth()+n); return d; }
 
 function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
+  const [animPct, setAnimPct] = useState(0);
   const pct = budget > 0 ? Math.min(100, (spent/budget)*100) : 0;
+
+  useEffect(() => {
+    setAnimPct(0);
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const duration = 900;
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        setAnimPct(pct * ease);
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [pct]);
+
   const radius = 80, cx = 110, cy = 100;
   const toRad = (deg: number) => (deg*Math.PI)/180;
   const arcPath = (start: number, end: number) => {
@@ -17,7 +35,7 @@ function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
     const e = { x: cx+radius*Math.cos(toRad(end)),   y: cy+radius*Math.sin(toRad(end)) };
     return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${end-start>180?1:0} 1 ${e.x} ${e.y}`;
   };
-  const endAngle = 150 + (240*pct)/100;
+  const endAngle = 150 + (240*animPct)/100;
   const color = pct>=100?"#F04452":pct>=80?"#F7C244":"#00B493";
   const textY = cy + radius + 28;
   const isDark = typeof window !== "undefined" && document.documentElement.classList.contains("dark");
@@ -26,8 +44,8 @@ function GaugeChart({ spent, budget }: { spent: number; budget: number }) {
   return (
     <svg viewBox="0 0 220 190" className="w-full max-w-[260px] mx-auto">
       <path d={arcPath(150,390)} fill="none" stroke={trackColor} strokeWidth="14" strokeLinecap="round"/>
-      {pct>0 && <path d={arcPath(150,endAngle)} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"/>}
-      <text x={cx} y={cy+10} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(pct)}%</text>
+      {animPct>0 && <path d={arcPath(150,endAngle)} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"/>}
+      <text x={cx} y={cy+10} textAnchor="middle" fontSize="30" fontWeight="700" fill={color} fontFamily="Pretendard,sans-serif">{Math.round(animPct)}%</text>
       <text x={cx} y={textY} textAnchor="middle" fontSize="13" fontFamily="Pretendard,sans-serif">
         <tspan fontWeight="600" fill={color}>{formatKRW(spent)}</tspan>
         <tspan fill="#8B95A1"> / </tspan>

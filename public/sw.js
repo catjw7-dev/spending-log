@@ -1,4 +1,4 @@
-const CACHE_NAME = "spending-log-v1";
+const CACHE_NAME = "spending-log-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(clients.claim()));
