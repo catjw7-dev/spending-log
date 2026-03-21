@@ -8,9 +8,7 @@ import { getTransactions, deleteTransaction, formatKRW, getMonthKey, getMonthLab
 import BottomNav from "@/components/BottomNav";
 
 function addMonths(date: Date, n: number) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + n);
-  return d;
+  const d = new Date(date); d.setMonth(d.getMonth() + n); return d;
 }
 
 export default function HomePage() {
@@ -25,157 +23,132 @@ export default function HomePage() {
   }, []);
 
   const monthKey = getMonthKey(currentMonth);
-
-  const monthlyTxs = useMemo(
-    () => transactions.filter(t => t.date.startsWith(monthKey)),
-    [transactions, monthKey]
-  );
-
-  const income = useMemo(
-    () => monthlyTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0),
-    [monthlyTxs]
-  );
-  const expense = useMemo(
-    () => monthlyTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
-    [monthlyTxs]
-  );
-
-  // 전체 누적 잔액
-  const balance = useMemo(() => {
-    return transactions
-      .filter(t => t.date <= `${monthKey}-31`)
-      .reduce((s, t) => t.type === "income" ? s + t.amount : s - t.amount, 0);
-  }, [transactions, monthKey]);
+  const monthlyTxs = useMemo(() => transactions.filter(t => t.date.startsWith(monthKey)), [transactions, monthKey]);
+  const income  = useMemo(() => monthlyTxs.filter(t => t.type === "income").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
+  const expense = useMemo(() => monthlyTxs.filter(t => t.type === "expense").reduce((s,t) => s+t.amount, 0), [monthlyTxs]);
+  const balance = useMemo(() => transactions.filter(t => t.date <= `${monthKey}-31`).reduce((s,t) => t.type==="income" ? s+t.amount : s-t.amount, 0), [transactions, monthKey]);
 
   const grouped = useMemo(() => {
     const map: Record<string, Transaction[]> = {};
-    [...monthlyTxs].sort((a, b) => b.date.localeCompare(a.date)).forEach(t => {
+    [...monthlyTxs].sort((a,b) => b.date.localeCompare(a.date)).forEach(t => {
       if (!map[t.date]) map[t.date] = [];
       map[t.date].push(t);
     });
-    return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]));
+    return Object.entries(map).sort((a,b) => b[0].localeCompare(a[0]));
   }, [monthlyTxs]);
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr + "T00:00:00");
+  const formatDate = (d: string) => {
+    const date = new Date(d + "T00:00:00");
     const days = ["일","월","화","수","목","금","토"];
-    return `${parseInt(dateStr.split("-")[1])}월 ${parseInt(dateStr.split("-")[2])}일 ${days[d.getDay()]}요일`;
+    return `${parseInt(d.split("-")[1])}월 ${parseInt(d.split("-")[2])}일 ${days[date.getDay()]}요일`;
   };
 
-  const isTodaySimple = (dateStr: string) => {
-    const today = new Date();
-    return dateStr === `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const isToday = (d: string) => {
+    const t = new Date();
+    return d === `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
   };
 
-  // 전체 재조회 없이 로컬 state만 업데이트
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("삭제할까요?")) return;
     setDeletingId(id);
     try {
       await deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
-    } finally {
-      setDeletingId(null);
-    }
+    } finally { setDeletingId(null); }
   }, []);
 
-  const handleExcel = () => {
+  const handleCSV = () => {
     const rows = [
       ["날짜","유형","카테고리","내용","금액"],
       ...monthlyTxs.sort((a,b) => a.date.localeCompare(b.date)).map(t => [
-        t.date, t.type === "income" ? "수입" : "지출", t.category, t.description,
-        t.type === "income" ? t.amount : -t.amount,
+        t.date, t.type==="income"?"수입":"지출", t.category, t.description,
+        t.type==="income" ? t.amount : -t.amount,
       ])
     ];
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob(["\uFEFF" + rows.map(r=>r.join(",")).join("\n")], { type:"text/csv;charset=utf-8;" });
     const a = document.createElement("a");
-    a.href = url;
+    a.href = URL.createObjectURL(blob);
     a.download = `${getMonthLabel(monthKey)}_지출내역.csv`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 bg-toss-bg dark:bg-[#0d1117]">
-      <div className="bg-white dark:bg-toss-card-dark px-5 pt-14 pb-6 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center justify-between mb-5">
-          <button onClick={() => setCurrentMonth(p => addMonths(p, -1))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg dark:hover:bg-toss-bg-dark transition-colors">
-            <ChevronLeft size={20} className="text-toss-text-3" />
+    <div className="flex flex-col min-h-screen pb-24 bg-page-bg dark:bg-dark-bg">
+      {/* 헤더 */}
+      <div className="bg-surface dark:bg-dark-card px-page pt-14 pb-card sticky top-0 z-10 shadow-card">
+        <div className="flex items-center justify-between mb-gap-lg">
+          <button onClick={() => setCurrentMonth(p => addMonths(p,-1))} className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors">
+            <ChevronLeft size={20} className="text-text-secondary" />
           </button>
-          <span className="text-[17px] font-semibold text-toss-text dark:text-white">{getMonthLabel(monthKey)}</span>
-          <button onClick={() => setCurrentMonth(p => addMonths(p, 1))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-toss-bg dark:hover:bg-toss-bg-dark transition-colors">
-            <ChevronRight size={20} className="text-toss-text-3" />
+          <span className="text-title text-ink dark:text-white">{getMonthLabel(monthKey)}</span>
+          <button onClick={() => setCurrentMonth(p => addMonths(p,1))} className="w-icon h-icon flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors">
+            <ChevronRight size={20} className="text-text-secondary" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-toss-bg dark:bg-toss-bg-dark rounded-2xl px-4 py-3">
-            <p className="text-[11px] text-toss-text-4 mb-1">수입</p>
-            <p className="text-[15px] font-semibold text-toss-green">+{formatKRW(income)}</p>
-          </div>
-          <div className="bg-toss-bg dark:bg-toss-bg-dark rounded-2xl px-4 py-3">
-            <p className="text-[11px] text-toss-text-4 mb-1">지출</p>
-            <p className="text-[15px] font-semibold text-toss-red">-{formatKRW(expense)}</p>
-          </div>
-          <div className="bg-toss-bg dark:bg-toss-bg-dark rounded-2xl px-4 py-3">
-            <p className="text-[11px] text-toss-text-4 mb-1">잔액</p>
-            <p className={`text-[15px] font-semibold ${balance >= 0 ? "text-toss-text dark:text-white" : "text-toss-red"}`}>
-              {balance >= 0 ? "" : "-"}{formatKRW(balance)}
-            </p>
-          </div>
+        <div className="grid grid-cols-3 gap-gap">
+          {[
+            { label:"수입", value:`+${formatKRW(income)}`, color:"text-income" },
+            { label:"지출", value:`-${formatKRW(expense)}`, color:"text-expense" },
+            { label:"잔액", value:`${balance<0?"-":""}${formatKRW(balance)}`, color: balance>=0 ? "text-ink dark:text-white" : "text-expense" },
+          ].map(item => (
+            <div key={item.label} className="bg-page-bg dark:bg-dark-bg rounded-item px-gap-lg py-gap">
+              <p className="text-label text-text-muted mb-1">{item.label}</p>
+              <p className={`text-amount-sm ${item.color}`}>{item.value}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-4">
+      {/* 내역 목록 */}
+      <div className="flex-1 px-page pt-gap-lg">
         {monthlyTxs.length > 0 && (
-          <button onClick={handleExcel} className="flex items-center gap-2 ml-auto mb-4 px-3 py-2 bg-white dark:bg-toss-card-dark rounded-xl border border-toss-border dark:border-toss-border-dark text-[13px] text-toss-text-3 font-medium shadow-card hover:bg-toss-bg transition-colors">
-            <Download size={14} />CSV 다운로드
+          <button onClick={handleCSV} className="flex items-center gap-gap-sm ml-auto mb-gap-lg px-gap py-gap-sm bg-surface dark:bg-dark-card rounded-item border border-border dark:border-dark-border text-caption text-text-secondary font-medium shadow-card">
+            <Download size={13} /> CSV 다운로드
           </button>
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-6 h-6 border-2 border-toss-blue border-t-transparent rounded-full animate-spin" />
-            <p className="text-[13px] text-toss-text-4">불러오는 중...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-gap">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-pill animate-spin" />
+            <p className="text-caption text-text-muted">불러오는 중...</p>
           </div>
         ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-5xl mb-4">💸</div>
-            <p className="text-[15px] font-medium text-toss-text-3">이번 달 내역이 없어요</p>
-            <p className="text-[13px] text-toss-text-5 mt-1">아래 + 버튼으로 추가해보세요</p>
+            <div className="text-5xl mb-gap-lg">💸</div>
+            <p className="text-subtitle text-text-secondary">이번 달 내역이 없어요</p>
+            <p className="text-caption text-text-muted mt-1">아래 + 버튼으로 추가해보세요</p>
           </div>
         ) : (
           grouped.map(([date, txs]) => {
-            const dayIncome = txs.filter(t => t.type === "income").reduce((s,t)=>s+t.amount,0);
-            const dayExpense = txs.filter(t => t.type === "expense").reduce((s,t)=>s+t.amount,0);
+            const di = txs.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+            const de = txs.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
             return (
-              <div key={date} className="mb-5">
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <span className="text-[13px] font-medium text-toss-text-4">{isTodaySimple(date) ? "오늘" : formatDate(date)}</span>
-                  <div className="flex gap-2 text-[12px]">
-                    {dayIncome > 0 && <span className="text-toss-green">+{formatKRW(dayIncome)}</span>}
-                    {dayExpense > 0 && <span className="text-toss-red">-{formatKRW(dayExpense)}</span>}
+              <div key={date} className="mb-section">
+                <div className="flex items-center justify-between mb-gap px-1">
+                  <span className="text-caption font-medium text-text-muted">{isToday(date) ? "오늘" : formatDate(date)}</span>
+                  <div className="flex gap-gap text-caption">
+                    {di > 0 && <span className="text-income">+{formatKRW(di)}</span>}
+                    {de > 0 && <span className="text-expense">-{formatKRW(de)}</span>}
                   </div>
                 </div>
-                <div className="bg-white dark:bg-toss-card-dark rounded-2xl overflow-hidden shadow-card">
+                <div className="bg-surface dark:bg-dark-card rounded-card overflow-hidden shadow-card">
                   {txs.map((tx, i) => (
-                    <div key={tx.id} className={`flex items-center px-4 py-3.5 ${i < txs.length-1 ? "border-b border-toss-border dark:border-toss-border-dark" : ""} ${deletingId === tx.id ? "opacity-40" : ""} transition-opacity`}>
-                      <div className="w-10 h-10 rounded-full bg-toss-bg dark:bg-toss-bg-dark flex items-center justify-center text-xl mr-3 flex-shrink-0">
+                    <div key={tx.id} className={`flex items-center px-card py-item ${i < txs.length-1 ? "border-b border-border dark:border-dark-border" : ""} ${deletingId===tx.id ? "opacity-40" : ""} transition-opacity`}>
+                      <div className="w-icon-lg h-icon-lg rounded-pill bg-page-bg dark:bg-dark-bg flex items-center justify-center text-xl mr-gap flex-shrink-0">
                         {getCategoryEmoji(tx.category)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[15px] font-medium text-toss-text dark:text-white truncate">{tx.description}</p>
-                        <p className="text-[12px] text-toss-text-4 mt-0.5">{tx.category}</p>
+                        <p className="text-subtitle text-ink dark:text-white truncate">{tx.description}</p>
+                        <p className="text-label text-text-muted mt-0.5">{tx.category}</p>
                       </div>
-                      <p className={`text-[15px] font-semibold mr-2 ${tx.type === "income" ? "text-toss-green" : "text-toss-red"}`}>
-                        {tx.type === "income" ? "+" : "-"}{formatKRW(tx.amount)}
+                      <p className={`text-amount-sm mr-gap-sm ${tx.type==="income" ? "text-income" : "text-expense"}`}>
+                        {tx.type==="income" ? "+" : "-"}{formatKRW(tx.amount)}
                       </p>
-                      <button onClick={() => router.push(`/edit/${tx.id}`)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-toss-bg dark:hover:bg-toss-bg-dark transition-colors flex-shrink-0">
-                        <Pencil size={13} className="text-toss-text-5" />
+                      <button onClick={() => router.push(`/edit/${tx.id}`)} className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors flex-shrink-0">
+                        <Pencil size={13} className="text-text-disabled" />
                       </button>
-                      <button onClick={() => handleDelete(tx.id)} disabled={deletingId === tx.id} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-toss-bg dark:hover:bg-toss-bg-dark transition-colors flex-shrink-0">
-                        <Trash2 size={13} className="text-toss-text-5" />
+                      <button onClick={() => handleDelete(tx.id)} disabled={deletingId===tx.id} className="w-icon-sm h-icon-sm flex items-center justify-center rounded-pill hover:bg-page-bg dark:hover:bg-dark-bg transition-colors flex-shrink-0">
+                        <Trash2 size={13} className="text-text-disabled" />
                       </button>
                     </div>
                   ))}
@@ -187,9 +160,8 @@ export default function HomePage() {
       </div>
 
       <button onClick={() => router.push("/add")}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-toss-blue rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform z-20"
-        style={{ boxShadow: "0 4px 20px rgba(49,130,246,0.45)" }}>
-        <Plus size={26} className="text-white" strokeWidth={2.5} />
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary rounded-pill flex items-center justify-center active:scale-95 transition-transform z-20 shadow-primary">
+        <Plus size={24} className="text-white" strokeWidth={2.5} />
       </button>
 
       <BottomNav active="home" />

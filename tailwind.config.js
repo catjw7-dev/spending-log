@@ -11,33 +11,67 @@ module.exports = {
       fontFamily: {
         sans: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
+      fontSize: {
+        "title":     ["17px", { lineHeight: "1.4", fontWeight: "600" }],
+        "subtitle":  ["15px", { lineHeight: "1.4", fontWeight: "500" }],
+        "body":      ["14px", { lineHeight: "1.6" }],
+        "caption":   ["13px", { lineHeight: "1.5" }],
+        "label":     ["11px", { lineHeight: "1.4" }],
+        "amount-lg": ["24px", { lineHeight: "1.2", fontWeight: "700" }],
+        "amount":    ["17px", { lineHeight: "1.2", fontWeight: "600" }],
+      },
       colors: {
-        toss: {
-          blue: "#3185FC",
-          "blue-dark": "#1B6EF3",
-          "blue-light": "#EBF3FE",
-          green: "#00B493",
-          "green-light": "#E5F7F4",
-          red: "#F04452",
-          "red-light": "#FEF0F1",
-          yellow: "#F7C244",
-          bg: "#F2F4F6",
-          "bg-dark": "#161b22",
-          card: "#FFFFFF",
-          "card-dark": "#1c2128",
-          text: "#131B23",
-          "text-2": "#1E2A35",
-          "text-3": "#4E5968",
-          "text-4": "#8B95A1",
-          "text-5": "#B0B8C1",
-          border: "#E5E8EB",
-          "border-dark": "#30363d",
-        },
+        // 메인 3색
+        primary:  "#3185FC",
+        ink:      "#131B23",
+        white:    "#FFFFFF",
+        // 수입/지출
+        income:   "#00B493",
+        expense:  "#F04452",
+        // 라이트모드 서피스
+        surface:  "#FFFFFF",
+        "page-bg":"#F2F4F6",
+        border:   "#E5E8EB",
+        // 다크모드 서피스
+        "dark-bg":   "#141920",
+        "dark-card": "#1E2530",
+        "dark-border":"#2A3340",
+        // 텍스트 계층
+        "text-primary":  "#131B23",
+        "text-secondary":"#4E5968",
+        "text-muted":    "#8B95A1",
+        "text-disabled": "#B0B8C1",
+      },
+      spacing: {
+        // 여백 토큰
+        "page":  "16px", // 페이지 좌우 패딩
+        "card":  "20px", // 카드 내부 패딩
+        "item":  "14px", // 리스트 아이템 패딩
+        "gap-sm":"8px",
+        "gap":   "12px",
+        "gap-lg":"16px",
+        "section":"24px",
+      },
+      borderRadius: {
+        "card": "16px",
+        "item": "12px",
+        "pill": "999px",
+      },
+      // 아이콘 컨테이너 크기
+      width: {
+        "icon-lg": "44px",
+        "icon":    "36px",
+        "icon-sm": "28px",
+      },
+      height: {
+        "icon-lg": "44px",
+        "icon":    "36px",
+        "icon-sm": "28px",
       },
       boxShadow: {
-        card: "0 2px 8px rgba(0,0,0,0.06)",
-        "card-hover": "0 4px 16px rgba(0,0,0,0.10)",
-        "card-dark": "0 2px 8px rgba(0,0,0,0.3)",
+        "card":     "0 2px 8px rgba(0,0,0,0.06)",
+        "card-lg":  "0 4px 16px rgba(0,0,0,0.10)",
+        "primary":  "0 4px 20px rgba(49,133,252,0.40)",
       },
     },
   },
